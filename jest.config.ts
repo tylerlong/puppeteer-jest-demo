@@ -6,6 +6,8 @@ const config: Config = {
   transform: {
     '^.+\\.ts': 'ts-jest',
   },
+  setupFiles: ['dotenv-override-true/config'],
+  testTimeout: 128000,
 };
 
 export default config;
