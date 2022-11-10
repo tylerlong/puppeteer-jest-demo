@@ -1,9 +1,9 @@
-describe('Google', () => {
-  beforeAll(async () => {
-    await page.goto('https://google.com');
-  });
+import * as fs from 'fs';
 
-  it('should be titled "Google"', async () => {
-    await expect(page.title()).resolves.toMatch('Google');
+describe('Google', () => {
+  it('default', async () => {
+    await page.goto('https://ringcentral.github.io/ringcentral-web-phone/');
+    const buffer = await page.screenshot();
+    fs.writeFileSync('./test.png', buffer);
   });
 });
