@@ -2,36 +2,51 @@
 import * as fs from 'fs';
 import waitFor from 'wait-for-async';
 
-describe('Google', () => {
-  it('default', async () => {
-    await page.goto('https://ringcentral.github.io/ringcentral-web-phone/');
-    await page.click('input[name="server"]', {clickCount: 3});
-    await page.type('input[name="server"]', process.env.RC_WP_SERVER!);
-    await page.type('input[name="clientId"]', process.env.RC_WP_CLIENT_ID!);
-    await page.type(
-      'input[name="clientSecret"]',
-      process.env.RC_WP_CLIENT_SECRET!
-    );
-    const [a] = await page.$x("//a[contains(., 'Simple Login')]");
-    await a.click();
-    await waitFor({interval: 1000});
+const login = async (username: string, extension = '', password: string) => {
+  const thePage = await browser.newPage();
+  await thePage.goto('https://ringcentral.github.io/ringcentral-web-phone/');
+  await thePage.click('input[name="server"]', {clickCount: 3}); // click 3 times to select all
+  await thePage.type('input[name="server"]', process.env.RC_WP_SERVER!);
+  await thePage.click('input[name="clientId"]', {clickCount: 3});
+  await thePage.type('input[name="clientId"]', process.env.RC_WP_CLIENT_ID!);
+  await thePage.click('input[name="clientSecret"]', {clickCount: 3});
+  await thePage.type(
+    'input[name="clientSecret"]',
+    process.env.RC_WP_CLIENT_SECRET!
+  );
+  const [a] = await thePage.$x("//a[contains(., 'Simple Login')]");
+  await a.click();
+  await waitFor({interval: 1000});
 
-    await page.type(
-      'input[name="username"]',
-      process.env.RC_WP_CALLER_USERNAME!
-    );
-    await page.type(
-      'input[name="extension"]',
-      process.env.RC_WP_CALLER_EXTENSION!
-    );
-    await page.type(
-      'input[name="password"]',
+  await thePage.click('input[name="username"]', {clickCount: 3});
+  await thePage.type('input[name="username"]', username);
+  await thePage.click('input[name="extension"]', {clickCount: 3});
+  await thePage.type('input[name="extension"]', extension);
+  await thePage.click('input[name="password"]', {clickCount: 3});
+  await thePage.type('input[name="password"]', password);
+  const [button] = await thePage.$x("//button[contains(., 'Login')]");
+  await button.click();
+  await waitFor({interval: 5000});
+  return thePage;
+};
+
+describe('RingCentral Web Phone', () => {
+  it('default', async () => {
+    const callerPage = await login(
+      process.env.RC_WP_CALLER_USERNAME!,
+      process.env.RC_WP_CALLER_EXTENSION,
       process.env.RC_WP_CALLER_PASSWORD!
     );
-    const [button] = await page.$x("//button[contains(., 'Login')]");
-    await button.click();
-    await waitFor({interval: 5000});
-    const buffer = await page.screenshot();
-    fs.writeFileSync('./test.png', buffer);
+    const receiverPage = await login(
+      process.env.RC_WP_RECEIVER_USERNAME!,
+      process.env.RC_WP_RECEIVER_EXTENSION,
+      process.env.RC_WP_RECEIVER_PASSWORD!
+    );
+
+    fs.writeFileSync('./screenshots/caller.png', await callerPage.screenshot());
+    fs.writeFileSync(
+      './screenshots/receiver.png',
+      await receiverPage.screenshot()
+    );
   });
 });
