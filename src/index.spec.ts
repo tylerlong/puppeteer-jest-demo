@@ -37,11 +37,17 @@ describe('RingCentral Web Phone', () => {
       process.env.RC_WP_CALLER_EXTENSION,
       process.env.RC_WP_CALLER_PASSWORD!
     );
+    expect(await callerPage.$x("//button[contains(., 'Logout')]")).toHaveLength(
+      1
+    );
     const receiverPage = await login(
       process.env.RC_WP_RECEIVER_USERNAME!,
       process.env.RC_WP_RECEIVER_EXTENSION,
       process.env.RC_WP_RECEIVER_PASSWORD!
     );
+    expect(
+      await receiverPage.$x("//button[contains(., 'Logout')]")
+    ).toHaveLength(1);
 
     fs.writeFileSync('./screenshots/caller.png', await callerPage.screenshot());
     fs.writeFileSync(
