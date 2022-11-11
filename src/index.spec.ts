@@ -80,5 +80,19 @@ describe('RingCentral Web Phone', () => {
       './screenshots/receiver_ringing.png',
       await receiverPage.screenshot()
     );
+    expect(await receiverPage.$x("//button[text()='Answer']")).toHaveLength(1);
+    const [answerButton] = await receiverPage.$x("//button[text()='Answer']");
+    await answerButton.click();
+    await waitFor({interval: 3000});
+    expect(
+      await receiverPage.$x("//h4[contains(text(), 'Call In Progress')]")
+    ).toHaveLength(1);
+    fs.writeFileSync(
+      './screenshots/receiver_answered.png',
+      await receiverPage.screenshot()
+    );
+
+    // hang up the call
+    // todo:
   });
 });
