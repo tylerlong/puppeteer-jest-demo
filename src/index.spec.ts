@@ -14,7 +14,7 @@ const login = async (username: string, extension = '', password: string) => {
     'input[name="clientSecret"]',
     process.env.RC_WP_CLIENT_SECRET!
   );
-  const [a] = await thePage.$x("//a[contains(., 'Simple Login')]");
+  const [a] = await thePage.$x("//a[contains(text(),'Simple Login')]");
   await a.click();
   await waitFor({interval: 1000});
 
@@ -24,7 +24,7 @@ const login = async (username: string, extension = '', password: string) => {
   await thePage.type('input[name="extension"]', extension);
   await thePage.click('input[name="password"]', {clickCount: 3});
   await thePage.type('input[name="password"]', password);
-  const [button] = await thePage.$x("//button[contains(., 'Login')]");
+  const [button] = await thePage.$x("//button[text()='Login']");
   await button.click();
   await waitFor({interval: 5000});
   return thePage;
@@ -32,26 +32,52 @@ const login = async (username: string, extension = '', password: string) => {
 
 describe('RingCentral Web Phone', () => {
   it('default', async () => {
+    // login
     const callerPage = await login(
       process.env.RC_WP_CALLER_USERNAME!,
       process.env.RC_WP_CALLER_EXTENSION,
       process.env.RC_WP_CALLER_PASSWORD!
     );
-    expect(await callerPage.$x("//button[contains(., 'Logout')]")).toHaveLength(
-      1
-    );
+    expect(await callerPage.$x("//button[text()='Logout']")).toHaveLength(1);
     const receiverPage = await login(
       process.env.RC_WP_RECEIVER_USERNAME!,
       process.env.RC_WP_RECEIVER_EXTENSION,
       process.env.RC_WP_RECEIVER_PASSWORD!
     );
-    expect(
-      await receiverPage.$x("//button[contains(., 'Logout')]")
-    ).toHaveLength(1);
-
-    fs.writeFileSync('./screenshots/caller.png', await callerPage.screenshot());
+    expect(await receiverPage.$x("//button[text()='Logout']")).toHaveLength(1);
     fs.writeFileSync(
-      './screenshots/receiver.png',
+      './screenshots/caller_logged_in.png',
+      await callerPage.screenshot()
+    );
+    fs.writeFileSync(
+      './screenshots/receiver_logged_in.png',
+      await receiverPage.screenshot()
+    );
+
+    // make the call
+    let receiverPhoneNumber = process.env.RC_WP_RECEIVER_USERNAME!;
+    if (
+      process.env.RC_WP_RECEIVER_EXTENSION !== undefined &&
+      process.env.RC_WP_RECEIVER_EXTENSION.length > 0
+    ) {
+      receiverPhoneNumber += '*' + process.env.RC_WP_RECEIVER_EXTENSION;
+    }
+    await callerPage.click('input[name="number"]', {clickCount: 3});
+    await callerPage.type('input[name="number"]', receiverPhoneNumber);
+    const [callButton] = await callerPage.$x("//button[text()='Call']");
+    await callButton.click();
+    await waitFor({interval: 3000});
+    expect(
+      await callerPage.$x("//h4[contains(text(), 'Call In Progress')]")
+    ).toHaveLength(1);
+    fs.writeFileSync(
+      './screenshots/caller_calling.png',
+      await callerPage.screenshot()
+    );
+
+    // answer the call
+    fs.writeFileSync(
+      './screenshots/receiver_ringing.png',
       await receiverPage.screenshot()
     );
   });
