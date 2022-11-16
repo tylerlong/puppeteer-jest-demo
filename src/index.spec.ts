@@ -93,6 +93,12 @@ describe('RingCentral Web Phone', () => {
     );
 
     // hang up the call
-    // todo:
+    const [hangButton] = await receiverPage.$x("//button[text()='Hang Up']");
+    await hangButton.click();
+    await waitFor({interval: 1000});
+    fs.writeFileSync(
+      './screenshots/receiver_hang_up.png',
+      await receiverPage.screenshot()
+    );
   });
 });
